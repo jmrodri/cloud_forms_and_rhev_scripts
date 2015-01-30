@@ -18,6 +18,14 @@ except:
     print "Example: easy_install ovirt-engine-sdk-python"
     sys.exit()
 
+try:
+    from paramiko import AutoAddPolicy
+    from paramiko.client import SSHClient
+except:
+    print "Please re-run after you have installed 'paramiko'"
+    print "Example: easy_install paramiko"
+    sys.exit()
+ 
 
 ENV_IP = "OVIRT_IP"
 ENV_USERNAME = "OVIRT_USERNAME"
@@ -113,6 +121,22 @@ def get_ip(api, vm_id):
             return ip
     return None
 
+def configure_cfme(ipaddr, ssh_username, ssh_password, region, db_password):
+    cmd = "appliance_console_cli --region %s --internal --force-key -p %s" % (region, db_password)
+    client = SSHClient()
+    try:
+        client.set_missing_host_key_policy(AutoAddPolicy()) 
+        client.connect(ipaddr, username=ssh_username, password=ssh_password, allow_agent=False)
+        print "Will run below command on host: %s" % (ipaddr)
+        print cmd
+        stdin, stdout, stderr = client.exec_command(cmd)
+        status = stdout.channel.recv_exit_status()
+        out = stdout.readlines()
+        err = stderr.readlines()
+        return status, out, err
+    finally:
+        client.close()
+
 if __name__ == "__main__":
     for env_var in [ENV_IP, ENV_USERNAME, ENV_PASSWORD]:
         if env_var not in os.environ:
@@ -163,3 +187,17 @@ if __name__ == "__main__":
 
     ip = get_ip(api, vm_id)
     print "VM '%s' has IP Address of '%s'" % (vm_id, ip)
+
+    ssh_username = "root"
+    ssh_password = "smartvm"
+    region = 1
+    db_password = "changeme"
+
+    status, stdout, stderr = configure_cfme(ip, ssh_username, ssh_password, region, db_password)
+    if status == 0:
+        print "Success configuring the CloudForms Appliance at https://%s" % (ip)
+        print "Output from configuring:"
+        print stdout
+    else:
+        print "Unable to configure CloudForms Appliance at '%s'" % (ip)
+        print stderr
