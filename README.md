@@ -6,6 +6,14 @@ Misc scripts exercising OVirt (RHEV) + ManageIQ (Cloud Forms) APIs
 
  - easy_install ovirt-engine-sdk-python
 
+# Suggested Usage
+
+ 1) Edit source_me_example
+ 2) source source_me_example
+ 3) ./import_cfme_appliance.py
+ 4) ./launch_cfme_vm.py IMPORTED_TEMPLATE_NAME
+ 5) ./add_rhev_provider.rb CFME_IP
+
 # Related Info
 
 - [OVirt API](http://www.ovirt.org/Testing/PythonApi)

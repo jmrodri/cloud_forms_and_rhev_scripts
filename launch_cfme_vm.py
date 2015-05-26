@@ -5,6 +5,7 @@
 ##  Launch a CFME appliance after we've imported it to oVirt as a VM Template.
 ####
 
+import getpass
 import os
 import sys
 import time
@@ -147,15 +148,21 @@ if __name__ == "__main__":
     username = os.environ[ENV_USERNAME]
     url = "https://%s" % (ip)
 
+    if len (sys.argv) < 2:
+        print "Please re-run with a the VM Template name"
+        sys.exit(1)
+
     api = API(url=url, username=username, password=password, insecure=True)
     if not api:
         print "Failed to connect to '%s'" % (url)
         sys.exit()
 
-    vm_name = "CloudFormsTest_%s" % time.time()
-    vm_template_name = "Imported_CFME_RHEVM_5.3-47"
+    vm_name = "%s_CloudFormsTest_%s" % (getpass.getuser(), time.time())
+    vm_template_name = sys.argv[1]
     storage_domain_name = "VMs"
     cluster_name = "Default"
+
+    print "Will launch a VM named '%s' from the template '%s'" % (vm_name, vm_template_name)
 
     template = api.templates.get(vm_template_name)
     if not template:

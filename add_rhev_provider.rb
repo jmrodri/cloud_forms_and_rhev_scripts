@@ -34,15 +34,32 @@ require 'openssl'
 #  Mechanize Ruby Docs:
 #  http://www.rubydoc.info/gems/mechanize/Mechanize/
 
+if ARGV.size < 1
+  puts "Please re-run with the IP address of the CFME VM"
+  exit
+end
 
-CFME_IP=ENV['CFME_IP']
-CFME_USERNAME=ENV['CFME_USERNAME']
-CFME_PASSWORD=ENV['CFME_PASSWORD']
+for env_var in ["OVIRT_IP", "OVIRT_USERNAME", "OVIRT_PASSWORD"] do
+  if ENV[env_var].nil?
+    puts "Please set the environment variable '#{env_var}' and retry"
+    exit
+  end
+end
 
-RHEV_IP=ENV['OVIRT_IP']
-RHEV_HOSTNAME=ENV['OVIRT_IP']
-RHEV_USERNAME=ENV['OVIRT_USERNAME']
-RHEV_PASSWORD=ENV['OVIRT_PASSWORD']
+
+
+CFME_IP=ARGV[0]
+CFME_USERNAME="admin"
+CFME_PASSWORD="smartvm"
+
+OVIRT_IP=ENV['OVIRT_IP']
+OVIRT_HOSTNAME=ENV['OVIRT_IP']
+OVIRT_USERNAME=ENV['OVIRT_USERNAME']
+OVIRT_PASSWORD=ENV['OVIRT_PASSWORD']
+
+
+puts "Will add the RHEV provider at #{OVIRT_IP} to the CloudForms VM at #{CFME_IP}"
+
 
 agent = Mechanize.new
 agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -66,15 +83,15 @@ new_provider_form["server_emstype"]="rhevm"
 
 # hostname and ipaddress are added dynamically from javascript when rhevm is selected
 # so we need to add these as new fields
-new_provider_form.add_field!("hostname", RHEV_HOSTNAME)
-new_provider_form.add_field!("ipaddress", RHEV_IP)
+new_provider_form.add_field!("hostname", OVIRT_HOSTNAME)
+new_provider_form.add_field!("ipaddress", OVIRT_IP)
 
 new_provider_form.port=""
 new_provider_form.server_zone="default"
 
-new_provider_form.default_userid=RHEV_USERNAME
-new_provider_form.default_password=RHEV_PASSWORD
-new_provider_form.default_verify=RHEV_PASSWORD
+new_provider_form.default_userid=OVIRT_USERNAME
+new_provider_form.default_password=OVIRT_PASSWORD
+new_provider_form.default_verify=OVIRT_PASSWORD
 
 new_provider_form.metrics_userid=""
 new_provider_form.metrics_password=""
@@ -89,8 +106,12 @@ submit_headers = {
   "Content-Type" => "application/x-www-form-urlencoded"
 }
 request_data = new_provider_form.request_data
-puts "Submitting request with data:\n\n#{request_data}\n\n"
+puts "\nSubmitting request with data:\n\n#{request_data}\n\n"
 provider_added = agent.post("https://#{CFME_IP}/ems_infra/create/new?button=add", request_data, submit_headers)
+
+puts "\nReceived response of:\n"
+puts "\nBody:\n"
 puts provider_added.body
+puts "\nHeader:\n"
 puts provider_added.header
 
