@@ -42,7 +42,7 @@ if __name__ == "__main__":
         sys.exit()
 
     cfme_image_file = "./cfme-rhevm-5.3-47.x86_64.rhevm.ova"
-    imported_vm_name = "jwm_cfme-rhevm-5.3-47_%s" % (time.time())
+    imported_template_name = "jwm_cfme-rhevm-5.3-47_%s" % (time.time())
     export_domain_name = "export"
     storage_domain_name = "VMs"
     cluster_name = "Default"
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     # ssh to engine node and upload the image in the home directory
     # engine-image-uploader -N cfme-rhevm-5.3-47 -e export -v -m upload ./cfme-rhevm-5.3-47.x86_64.rhevm.ova
-    engine_image_upload_cmd = "engine-image-uploader -u %s -p \'%s\' -N %s -e %s -v -m upload ~/%s" % (username, password, imported_vm_name, export_domain_name, cfme_image_file)
+    engine_image_upload_cmd = "engine-image-uploader -u %s -p \'%s\' -N %s -e %s -m upload ~/%s" % (username, password, imported_template_name, export_domain_name, cfme_image_file)
     cmd = "ssh root@%s -o \'StrictHostKeyChecking no\' -C '%s'" % (ip, engine_image_upload_cmd)
     status, out, err = run_command(cmd)
     if status:
@@ -89,20 +89,20 @@ if __name__ == "__main__":
         print err
         sys.exit()
 
-    print "Uploaded '%s' as '%s' to export domain '%s' on '%s'" % (cfme_image_file, imported_vm_name, export_domain_name, ip)
+    print "Uploaded '%s' as '%s' to export domain '%s' on '%s'" % (cfme_image_file, imported_template_name, export_domain_name, ip)
     print out
 
     # Import appliance as a VM template
     data_center = api.datacenters.get(data_center_name)
-    export_domain = data_center.storagedomains.get(export_domain_name)
+    export_domain = api.storagedomains.get(export_domain_name)
     storage_domain = api.storagedomains.get(storage_domain_name)
     cluster = api.clusters.get(name=cluster_name)
 
     import_template_params = params.Action(storage_domain=storage_domain, 
         cluster=cluster)
 
-    export_domain.vms.get(imported_vm_name).import_vm(import_template_params)
-    print 'VM was imported successfully'
-    print 'Waiting for VM to reach Down status'
-    while api.vms.get(imported_vm_name).status.state != 'down':
-        sleep(1)
+    export_domain.templates.get(imported_template_name).import_template(import_template_params)
+    print 'Template was imported successfully'
+    print 'Waiting for Template to reach "ok" status'
+    while api.templates.get(imported_template_name).status.state != 'ok':
+        time.sleep(1)
