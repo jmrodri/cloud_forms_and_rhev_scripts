@@ -56,3 +56,5 @@ target/
 # ENV Specifics
 source_me
 
+# Downloaded CloudForm Appliances
+*.ova
