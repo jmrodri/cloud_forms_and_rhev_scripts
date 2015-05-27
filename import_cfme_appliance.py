@@ -42,7 +42,7 @@ if __name__ == "__main__":
         sys.exit()
 
     cfme_image_file = "./cfme-rhevm-5.3-47.x86_64.rhevm.ova"
-    imported_template_name = "jwm_cfme-rhevm-5.3-47_%s" % (time.time())
+    imported_template_name = "zeus_cfme-rhevm-5.3-47_%s" % (time.time())
     export_domain_name = "export"
     storage_domain_name = "VMs"
     cluster_name = "Default"
